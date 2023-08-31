@@ -45,10 +45,20 @@ def one_hot_index(X: np.array, index: int, nan_data=False):
 
     return one_hotted, items
 
+
 def grade_index(X: np.array, index: int, grading: np.array, nan_data=False):
 
     data = X[:, index]
     graded = np.zeros(shape=data.shape)
+
+    if nan_data:
+        #  clear out nan data for easier use
+        for i in range(data.shape[0]):
+            if pd.isnull(data[i]):
+                data[i] = 'temp'
+
+        tmp = np.array(['temp'])
+        grading = np.concatenate([tmp, grading])
 
     for i in range(grading.shape[0]):
         search = np.where(data == grading[i])[0]
@@ -105,19 +115,57 @@ def fireplace_data(X: np.array):
         for j in range(len(fp_quality)):
 
             if fp_quality[j] == data[i][1]:
-                fp_data[i][j] = data[i][0]  # add quantity of type 1
+                fp_data[i][j] = data[i][0]
+                break
 
     return fp_data
+
+
+def garage_data(X: np.array):
+
+    garage_indexes = [57, 58, 59, 60, 61, 62, 63]
+
+    data = X[:, garage_indexes]
+
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            if pd.isnull(data[i][j]):
+                if j == 1:
+                    data[i][j] = 2024  # this input will yield age of -1 when there is no garage
+                else:
+                    data[i][j] = 'temp'
+
+    types = ['2Types', 'Attchd', 'Basement', 'BuiltIn', 'CarPort', 'Detchd']
+
+
+    garage_types = np.zeros(shape=(X.shape[0], len(types)))
+    for i in range(X.shape[0]):
+        for j in range(len(types)):
+
+            if data[i][0] == types[j]:
+                garage_types[i][j] = 1
+                break
+
+    age = 2023 - data[:, [1]].astype('int32')
+    size = data[:, [3, 4]]
+
+    fin, grd = grade_index(data, 2, np.array(['temp', 'Unf', 'RFn', 'Fin']), nan_data=False)
+    qual, grd = grade_index(data, 5, np.array(['temp', 'Po', 'Fa', 'TA', 'Gd', 'Ex']), nan_data=False)
+    cond, grd = grade_index(data, 6, np.array(['temp', 'Po', 'Fa', 'TA', 'Gd', 'Ex']), nan_data=False)
+
+    t = np.column_stack((fin, qual, cond))
+
+    return np.hstack((garage_types, age, size, t))
 
 
 def clean_lot_data(X: np.array):
 
     zzz = X[:, 0]
     to_one_hot = [0, 1, 4, 7, 9, 11, 12, 13, 14, 15, 20, 21, 22, 23, 28, 38, 77, 78]
-    to_one_hot_nan = [5, 24, 41, 57, 73]
+    to_one_hot_nan = [5, 24, 41, 73]
 
-    no_adjustments = [2, 3, 8, 10, 16, 17, 18, 19, 25, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 53, 60,
-                      61, 65, 66, 67, 68, 69, 70, 74, 75]
+    no_adjustments = [2, 3, 8, 10, 16, 17, 18, 19, 25, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 53,
+                      65, 66, 67, 68, 69, 70, 74, 75]
 
     graded_index = [6, 10, 26, 27, 39, 40, 52, 54, 64]
     graded_scale = []
@@ -131,13 +179,16 @@ def clean_lot_data(X: np.array):
     graded_scale.append(np.array(['Sal', 'Sev', 'Maj2', 'Maj1', 'Mod', 'Min2', 'Min1', 'Typ']))
     graded_scale.append(np.array(['N', 'P', 'Y']))
 
-    graded_index_nan = [29, 30, 31, 59, 62, 63, 71, 72]
+    graded_index_nan = [29, 30, 31, 71, 72]
+    #  consider changing how nan valued columns are processed based on results later
 
     basement_index = [32, 33, 34, 35, 36]
 
     fp_index = [55, 56]
 
-    to_adjust = [8, 18, 19, 58, 76]
+    garage_indexes = [57, 58, 59, 60, 61, 62, 63]
+
+    to_adjust = [8, 18, 19, 76]
 
     not_needed = [37]
 
@@ -149,8 +200,7 @@ def clean_lot_data(X: np.array):
     # data on basement - If there is one basement material it is listed as though the second type is unf (34)
     # unfinished data is only applied in (36) (i.e. if material is listed as unf footage of that metrial is 0)
 
-    d = fireplace_data(X)
-    zzz = X[:, [55, 56]]
+    zzz = garage_data(X)
     yyy = 0
 
 
