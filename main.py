@@ -158,14 +158,52 @@ def garage_data(X: np.array):
     return np.hstack((garage_types, age, size, t))
 
 
+def utilities_data(X: np.array):
+
+    # note here that training data contains 1 instance where it's not allpub (i.e. this might be garbage data)
+    data = X[:, 8]
+    utilities = np.ones(shape=(X.shape[0], 3))
+
+    no_s = np.unique(data)
+    no_s = np.where(data == 'NoSewr')[0]
+    utilities[no_s, 2] = 0
+
+    no_sw = np.where(data == 'NoSeWa')[0]
+    utilities[no_sw, 1] = 0
+    utilities[no_sw, 2] = 0
+
+    no_swg = np.where(data == 'ELO')[0]
+    utilities[no_swg, 0] = 0
+    utilities[no_swg, 1] = 0
+    utilities[no_swg, 2] = 0
+
+    return utilities
+
+
+def year_built_data(X: np.array):
+
+    # note here that training data contains 1 instance where it's not allpub (i.e. this might be garbage data)
+    data = X[:, [18, 19]]
+    return 2023 - data
+
+def year_sold_data(X: np.array):
+
+    # note here that training data contains 1 instance where it's not allpub (i.e. this might be garbage data)
+    data = X[:, [76]]
+    return 2023 - data
+
+
 def clean_lot_data(X: np.array):
 
     zzz = X[:, 0]
     to_one_hot = [0, 1, 4, 7, 9, 11, 12, 13, 14, 15, 20, 21, 22, 23, 28, 38, 77, 78]
+    # ^ done
     to_one_hot_nan = [5, 24, 41, 73]
+    # ^ done
 
     no_adjustments = [2, 3, 8, 10, 16, 17, 18, 19, 25, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 53,
                       65, 66, 67, 68, 69, 70, 74, 75]
+    # ^ done
 
     graded_index = [6, 10, 26, 27, 39, 40, 52, 54, 64]
     graded_scale = []
@@ -178,30 +216,51 @@ def clean_lot_data(X: np.array):
     graded_scale.append(np.array(['Po', 'Fa', 'TA', 'Gd', 'Ex']))
     graded_scale.append(np.array(['Sal', 'Sev', 'Maj2', 'Maj1', 'Mod', 'Min2', 'Min1', 'Typ']))
     graded_scale.append(np.array(['N', 'P', 'Y']))
+    # ^ done
 
     graded_index_nan = [29, 30, 31, 71, 72]
     #  consider changing how nan valued columns are processed based on results later
+    # add grading
 
     basement_index = [32, 33, 34, 35, 36]
+    # ^ done
 
     fp_index = [55, 56]
+    # ^ done
 
     garage_indexes = [57, 58, 59, 60, 61, 62, 63]
+    # ^ done
 
-    to_adjust = [8, 18, 19, 76]
+    to_adjust = [18, 19, 76]
+    # 8, 18, 19, 76 is done
 
-    not_needed = [37]
+    not_needed = [8, 37]
 
     # CONSIDER - adjust features like exeterion1st and 2nd (that go together) so that they can be one hotted together
-    # ADD - function that receives data with textual scale and convert it to number grades
     # check how no garage (index 57) interacts with garage year built (58), verify garage size is 0 (59, 60)
     # ^ nan garage (57) means year built is also nan (58) so is finish (59) but size is 0 (60, 61)
 
-    # data on basement - If there is one basement material it is listed as though the second type is unf (34)
-    # unfinished data is only applied in (36) (i.e. if material is listed as unf footage of that metrial is 0)
+    one_hot = []
+    data_adjustments = []
 
-    zzz = garage_data(X)
-    yyy = 0
+    for i in to_one_hot:
+        col, items = one_hot_index(X, i)
+        one_hot.append(col)
+        data_adjustments.append(items)
+
+    one_hot_nan = []
+    for i in to_one_hot_nan:
+        col, items = one_hot_index(X, i, True)
+        one_hot_nan.append(col)
+        data_adjustments.append(items)
+
+    unadjusted = []
+    for i in no_adjustments:
+
+        unadjusted.append(X[:, i])
+        data_adjustments.append(-1)
+
+
 
 
 
