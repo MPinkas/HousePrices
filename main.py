@@ -218,7 +218,13 @@ def clean_lot_data(X: np.array):
     graded_scale.append(np.array(['N', 'P', 'Y']))
     # ^ done
 
-    graded_index_nan = [29, 30, 31, 71, 72]
+    nan_graded_index = [29, 30, 31, 71, 72]
+    nan_graded_scale = []
+    nan_graded_scale.append(np.array(['Po', 'Fa', 'TA', 'Gd', 'Ex']))
+    nan_graded_scale.append(np.array(['Po', 'Fa', 'TA', 'Gd', 'Ex']))
+    nan_graded_scale.append(np.array(['No', 'Mn', 'Av', 'Gd']))
+    nan_graded_scale.append(np.array(['Fa', 'TA', 'Gd', 'Ex']))
+    nan_graded_scale.append(np.array(['MnWw', 'GdWo', 'MnPrv', 'GdPrv']))
     #  consider changing how nan valued columns are processed based on results later
     # add grading
 
@@ -248,6 +254,9 @@ def clean_lot_data(X: np.array):
         one_hot.append(col)
         data_adjustments.append(items)
 
+    zzz1 = np.hstack(one_hot)
+    # ^ this is how everthing needs to be glued together
+
     one_hot_nan = []
     for i in to_one_hot_nan:
         col, items = one_hot_index(X, i, True)
@@ -260,8 +269,20 @@ def clean_lot_data(X: np.array):
         unadjusted.append(X[:, i])
         data_adjustments.append(-1)
 
+    graded_data = []
+    for i in range(len(graded_index)):
 
+        col, grading = grade_index(X, graded_index[i], graded_scale[i])
+        graded_data.append(col)
+        data_adjustments.append(grading)
 
+    nan_graded_data = []
+    for i in range(len(nan_graded_index)):
+        col, grading = grade_index(X, nan_graded_index[i], nan_graded_scale[i], True)
+        nan_graded_data.append(col)
+        data_adjustments.append(grading)
+
+    zzz = 0
 
 
 
